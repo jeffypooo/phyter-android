@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">pHyter Data Logger</string>
+  <string name="app_name">pHyter Data Logger</string>
+  <string name="placeholder">placeholder</string>
+  <string name="launch_toolbar_subtitle">Choose your instrument:</string>
+  <string name="menu_launch_simulator">Launch instrument simulator</string>
 </resources>
