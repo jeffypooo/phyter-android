@@ -5,8 +5,8 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.*
 import android.content.Intent
-import android.os.ParcelUuid
 import com.jmjproductdev.phyter.core.bluetooth.BLEManager
+import com.jmjproductdev.phyter.core.bluetooth.BLEPeripheral
 import com.jmjproductdev.phyter.core.instrument.Phyter
 import com.jmjproductdev.phyter.core.instrument.PhyterMeasurement
 import com.jmjproductdev.phyter.core.instrument.PhyterScanner
@@ -103,6 +103,10 @@ class AndroidBLEManager(activity: Activity) : BLEManager {
     }
 
     return Single.error(npe("activity is null"))
+  }
+
+  override fun createPeripheral(serviceUuid: UUID): BLEPeripheral? {
+    TODO("not implemented")
   }
 
   @Synchronized

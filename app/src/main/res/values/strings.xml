@@ -3,4 +3,13 @@
   <string name="placeholder">placeholder</string>
   <string name="launch_toolbar_subtitle">Choose your instrument:</string>
   <string name="menu_launch_simulator">Launch instrument simulator</string>
+  <string name="start">Start</string>
+  <string name="randomize">Randomize</string>
+  <string name="instrument_name">Instrument name</string>
+  <string name="foo_bar">Name</string>
+  <string name="address_label">Address:</string>
+  <string name="cd_inst_name">Instrument name</string>
+  <string name="name">Name</string>
+  <string name="name_label">Name:</string>
+  <string name="simulator_toolbar_title">pHyter Simulator</string>
 </resources>

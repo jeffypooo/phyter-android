@@ -5,7 +5,8 @@
   <item
       android:id="@+id/action_simulator"
       android:title="@string/menu_launch_simulator"
-      app:showAsAction="never"
+      app:showAsAction="ifRoom"
+      android:icon="@drawable/ic_developer_board_24dp"
   />
 
   <!--<item-->

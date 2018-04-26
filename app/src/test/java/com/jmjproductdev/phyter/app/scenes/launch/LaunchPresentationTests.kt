@@ -184,6 +184,20 @@ class LaunchPresenterTest : MockitoTest() {
     verify(mockView, times(1)).update(dev)
   }
 
+  @Test
+  fun menu_launchSim_presentsSimulatorView() {
+    driveOnCreate()
+    presenter.onMenuOptionSelected(LaunchMenuOption.LAUNCH_SIM)
+    verify(mockView).presentSimulatorView()
+  }
+
+  @Test
+  fun menu_launchSim_disposesScan() {
+    driveOnCreate(completeInitialScan = false)
+    presenter.onMenuOptionSelected(LaunchMenuOption.LAUNCH_SIM)
+    assertThat(scanSubject.hasObservers(), equalTo(false))
+  }
+
   private fun driveOnCreate(completeInitialScan: Boolean = true) {
     presenter.onCreate(mockView)
     with(mockBLEManager) {

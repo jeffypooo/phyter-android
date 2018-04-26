@@ -12,12 +12,18 @@ import com.jmjproductdev.phyter.android.appcompat.getColorCompat
 import com.jmjproductdev.phyter.android.bluetooth.AndroidBLEManager
 import com.jmjproductdev.phyter.android.permissions.ActivityPermissionsManager
 import com.jmjproductdev.phyter.app.common.android.adapter.PhytersAdapter
+import com.jmjproductdev.phyter.app.scenes.simulator.PhyterSimulatorActivity
 import com.jmjproductdev.phyter.core.instrument.Phyter
-import com.mikepenz.itemanimators.AlphaCrossFadeAnimator
-import com.mikepenz.itemanimators.AlphaInAnimator
-import com.mikepenz.itemanimators.SlideDownAlphaAnimator
 import kotlinx.android.synthetic.main.activity_launch.*
 import timber.log.Timber
+
+
+private fun menuOption(fromId: Int): LaunchMenuOption? {
+  return when (fromId) {
+    R.id.action_simulator -> LaunchMenuOption.LAUNCH_SIM
+    else                  -> return null
+  }
+}
 
 
 class LaunchActivity : PhyterActivity(), LaunchView {
@@ -62,9 +68,12 @@ class LaunchActivity : PhyterActivity(), LaunchView {
     return true
   }
 
-  override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-    item?.let { Timber.i("menu item selected: '$item'") }
-    return true
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    menuOption(fromId = item.itemId)?.let {
+      presenter.onMenuOptionSelected(it)
+      return true
+    }
+    return false
   }
 
   override fun showSnackbar(msg: String) {
@@ -95,6 +104,10 @@ class LaunchActivity : PhyterActivity(), LaunchView {
     }
   }
 
+  override fun presentSimulatorView() {
+    runOnUiThread { startActivity(Intent(this, PhyterSimulatorActivity::class.java)) }
+  }
+
   private fun setupViews() {
     /* toolbar */
     with(toolbar) {
@@ -104,7 +117,7 @@ class LaunchActivity : PhyterActivity(), LaunchView {
     with(swipeLayout) {
       /* progress indicator colors */
       setProgressBackgroundColorSchemeColor(getColorCompat(R.color.colorAccent))
-      setColorSchemeColors(getColorCompat(R.color.colorDivider))
+      setColorSchemeColors(getColorCompat(R.color.colorOffWhite))
       /* listener */
       setOnRefreshListener { presenter.onRefresh() }
     }

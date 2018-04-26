@@ -9,10 +9,15 @@ import com.jmjproductdev.phyter.core.permissions.PermissionsManager
 import io.reactivex.disposables.CompositeDisposable
 import timber.log.Timber
 
+enum class LaunchMenuOption {
+  LAUNCH_SIM
+}
+
 interface LaunchView : PhyterView {
   var refresing: Boolean
   fun add(device: Phyter)
   fun update(device: Phyter)
+  fun presentSimulatorView()
 }
 
 
@@ -31,6 +36,13 @@ class LaunchPresenter(val permissionsManager: PermissionsManager, val bleManager
   fun onRefresh() {
     Timber.d("user manually refreshed")
     checkBluetoothAndScan()
+  }
+
+  fun onMenuOptionSelected(option: LaunchMenuOption) {
+    permissionsSubs.clear()
+    bluetoothSubs.clear()
+    Timber.d("presenting simulator view")
+    view?.presentSimulatorView()
   }
 
   private fun checkPermissionsAndScan() {
