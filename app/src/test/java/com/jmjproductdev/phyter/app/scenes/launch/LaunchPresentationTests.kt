@@ -1,15 +1,19 @@
 package com.jmjproductdev.phyter.app.scenes.launch
 
 import com.jmjproductdev.phyter.MockitoTest
+import com.jmjproductdev.phyter.android.bluetooth.Devices
 import com.jmjproductdev.phyter.core.bluetooth.BLEManager
 import com.jmjproductdev.phyter.core.instrument.Phyter
 import com.jmjproductdev.phyter.core.instrument.PhyterScanner
 import com.jmjproductdev.phyter.core.permissions.Permission
 import com.jmjproductdev.phyter.core.permissions.PermissionsManager
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.*
+import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.subjects.CompletableSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.SingleSubject
 import org.junit.Before
@@ -68,7 +72,7 @@ class LaunchPresenterTest : MockitoTest() {
     whenever(mockScanner.scan()).thenReturn(Observable.never())
     presenter.onCreate(mockView)
     verify(mockScanner).scan()
-    verify(mockView).refresing = true
+    verify(mockView).refreshing = true
   }
 
   @Test
@@ -127,7 +131,7 @@ class LaunchPresenterTest : MockitoTest() {
     driveOnCreate()
     presenter.onRefresh()
     verify(mockScanner, times(2)).scan()
-    verify(mockView, times(2)).refresing = true
+    verify(mockView, times(2)).refreshing = true
   }
 
   @Test
@@ -185,6 +189,65 @@ class LaunchPresenterTest : MockitoTest() {
   }
 
   @Test
+  fun onDeviceClick_connectsToDevice() {
+    driveOnCreate()
+    val device = mock<Phyter> {
+      on { connect() } doReturn Completable.complete()
+    }
+    presenter.onDeviceClicked(device)
+    verify(device).connect()
+  }
+
+  @Test
+  fun onDeviceClicked_disposesScan() {
+    val device = mock<Phyter> {
+      on { connect() } doReturn Completable.complete()
+    }
+    driveOnCreate(completeInitialScan = false)
+    presenter.onDeviceClicked(device)
+    assertThat(scanSubject.hasObservers(), equalTo(false))
+  }
+
+  @Test
+  fun onDeviceClicked_presentsConnectingDialogAndDismissesAfterConnect() {
+    driveOnCreate()
+    val connectStub = CompletableSubject.create()
+    val device = mock<Phyter> {
+      on { connect() } doReturn connectStub
+    }
+    presenter.onDeviceClicked(device)
+    verify(mockView).presentConnectingDialog(device)
+    connectStub.onComplete()
+    verify(mockView).dismissConnectingDialog()
+  }
+
+  @Test
+  fun onDeviceClicked_presentsMeasureViewAfterConnect() {
+    driveOnCreate()
+    val connectStub = CompletableSubject.create()
+    val device = mock<Phyter> {
+      on { connect() } doReturn connectStub
+    }
+    presenter.onDeviceClicked(device)
+    verify(mockView, never()).presentMeasureView(device)
+    connectStub.onComplete()
+    verify(mockView).presentMeasureView(device)
+  }
+
+  @Test
+  fun onDeviceClicked_setsActiveDeviceAfterConnect() {
+    driveOnCreate()
+    val connectStub = CompletableSubject.create()
+    val device = mock<Phyter> {
+      on { connect() } doReturn connectStub
+    }
+    presenter.onDeviceClicked(device)
+    assertThat(Devices.shared().activeDevice, absent())
+    connectStub.onComplete()
+    assertThat(Devices.shared().activeDevice, equalTo(device))
+  }
+
+  @Test
   fun menu_launchSim_presentsSimulatorView() {
     driveOnCreate()
     presenter.onMenuOptionSelected(LaunchMenuOption.LAUNCH_SIM)
@@ -211,7 +274,7 @@ class LaunchPresenterTest : MockitoTest() {
     if (!completeInitialScan) return
     scanSubject.onComplete()
     scanSubject = PublishSubject.create() // need to recreate here so it can be used again if needed
-    verify(mockView).refresing = false
+    verify(mockView).refreshing = false
   }
 
 

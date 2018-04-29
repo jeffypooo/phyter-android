@@ -3,16 +3,18 @@ package com.jmjproductdev.phyter.app.scenes.launch
 import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.view.Menu
 import android.view.MenuItem
 import com.jmjproductdev.phyter.R
 import com.jmjproductdev.phyter.android.activity.PhyterActivity
 import com.jmjproductdev.phyter.android.appcompat.getColorCompat
-import com.jmjproductdev.phyter.android.bluetooth.AndroidBLEManager
+import com.jmjproductdev.phyter.android.bluetooth.ActivityBLEManager
 import com.jmjproductdev.phyter.android.permissions.ActivityPermissionsManager
 import com.jmjproductdev.phyter.app.common.android.adapter.PhytersAdapter
-import com.jmjproductdev.phyter.app.scenes.simulator.PhyterSimulatorActivity
+import com.jmjproductdev.phyter.app.scenes.measure.MeasureActivity
+import com.jmjproductdev.phyter.app.scenes.simulator.SimulatorActivity
 import com.jmjproductdev.phyter.core.instrument.Phyter
 import kotlinx.android.synthetic.main.activity_launch.*
 import timber.log.Timber
@@ -28,7 +30,7 @@ private fun menuOption(fromId: Int): LaunchMenuOption? {
 
 class LaunchActivity : PhyterActivity(), LaunchView {
 
-  override var refresing: Boolean
+  override var refreshing: Boolean
     get() = swipeLayout.isRefreshing
     set(value) {
       runOnUiThread {
@@ -40,9 +42,10 @@ class LaunchActivity : PhyterActivity(), LaunchView {
   private val instrumentsAdapter: PhytersAdapter
     get() = instrumentList.adapter as PhytersAdapter
 
+  private var connectingDialog: AlertDialog? = null
 
   private lateinit var permissionsManager: ActivityPermissionsManager
-  private lateinit var bleManager: AndroidBLEManager
+  private lateinit var bleManager: ActivityBLEManager
   private lateinit var presenter: LaunchPresenter
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,8 +107,30 @@ class LaunchActivity : PhyterActivity(), LaunchView {
     }
   }
 
+  override fun presentConnectingDialog(device: Phyter) {
+    runOnUiThread {
+      connectingDialog = AlertDialog.Builder(this).let {
+        it.setTitle("Please wait")
+        it.setMessage("Connecting to ${device.name}...")
+        it.setCancelable(false)
+        it.show()
+      }
+    }
+  }
+
+  override fun dismissConnectingDialog() {
+    runOnUiThread { connectingDialog?.dismiss() }
+  }
+
+  override fun presentMeasureView(device: Phyter) {
+    runOnUiThread {
+      //TODO add device as parcel
+      startActivity(Intent(this, MeasureActivity::class.java))
+    }
+  }
+
   override fun presentSimulatorView() {
-    runOnUiThread { startActivity(Intent(this, PhyterSimulatorActivity::class.java)) }
+    runOnUiThread { startActivity(Intent(this, SimulatorActivity::class.java)) }
   }
 
   private fun setupViews() {
@@ -126,7 +151,10 @@ class LaunchActivity : PhyterActivity(), LaunchView {
       layoutManager = LinearLayoutManager(this@LaunchActivity)
 
       adapter = PhytersAdapter(this@LaunchActivity).apply {
-        onItemClickListener = { device, position -> Timber.i("clicked: $device @ $position") }
+        onItemClickListener = { device, position ->
+          Timber.i("clicked: $device @ $position")
+          presenter.onDeviceClicked(device)
+        }
       }
 
     }
@@ -134,7 +162,7 @@ class LaunchActivity : PhyterActivity(), LaunchView {
 
   private fun setupPresenter() {
     permissionsManager = ActivityPermissionsManager(this)
-    bleManager = AndroidBLEManager(this)
+    bleManager = ActivityBLEManager(this)
     presenter = LaunchPresenter(permissionsManager, bleManager)
   }
 }

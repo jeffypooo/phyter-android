@@ -12,4 +12,10 @@
   <string name="name">Name</string>
   <string name="name_label">Name:</string>
   <string name="simulator_toolbar_title">pHyter Simulator</string>
+  <string name="title_measure">Measure</string>
+  <string name="cd_salinity_value">Salinity Value</string>
+  <string name="salinity_label">Salinity</string>
+  <string name="history_label">History</string>
+  <string name="btn_measure_background">Measure background</string>
+  <string name="_35_0">35.0</string>
 </resources>

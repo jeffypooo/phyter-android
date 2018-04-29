@@ -1,5 +1,6 @@
 package com.jmjproductdev.phyter.app.scenes.launch
 
+import com.jmjproductdev.phyter.android.bluetooth.Devices
 import com.jmjproductdev.phyter.app.common.presentation.PhyterPresenter
 import com.jmjproductdev.phyter.app.common.presentation.PhyterView
 import com.jmjproductdev.phyter.core.bluetooth.BLEManager
@@ -14,9 +15,12 @@ enum class LaunchMenuOption {
 }
 
 interface LaunchView : PhyterView {
-  var refresing: Boolean
+  var refreshing: Boolean
   fun add(device: Phyter)
   fun update(device: Phyter)
+  fun presentConnectingDialog(device: Phyter)
+  fun dismissConnectingDialog()
+  fun presentMeasureView(device: Phyter)
   fun presentSimulatorView()
 }
 
@@ -24,7 +28,9 @@ interface LaunchView : PhyterView {
 class LaunchPresenter(val permissionsManager: PermissionsManager, val bleManager: BLEManager) : PhyterPresenter<LaunchView>() {
 
   private val permissionsSubs = CompositeDisposable()
-  private val bluetoothSubs = CompositeDisposable()
+  private val enables = CompositeDisposable()
+  private val scans = CompositeDisposable()
+  private val connects = CompositeDisposable()
   private val instruments = mutableMapOf<String, Phyter>()
 
 
@@ -38,11 +44,41 @@ class LaunchPresenter(val permissionsManager: PermissionsManager, val bleManager
     checkBluetoothAndScan()
   }
 
+  fun onDeviceClicked(device: Phyter) {
+    scans.clear()
+    view?.refreshing = false
+    view?.presentConnectingDialog(device)
+    Timber.d("connecting to $device...")
+    device.connect()
+        .subscribe(
+            {
+              Timber.d("connected to $device")
+              Devices.shared().activeDevice = device
+              view?.apply {
+                dismissConnectingDialog()
+                presentMeasureView(device)
+              }
+            },
+            {
+              Timber.e("error connecting to $device: $it")
+              view?.dismissConnectingDialog()
+            }
+        )
+        .also { connects.add(it) }
+  }
+
   fun onMenuOptionSelected(option: LaunchMenuOption) {
-    permissionsSubs.clear()
-    bluetoothSubs.clear()
-    Timber.d("presenting simulator view")
-    view?.presentSimulatorView()
+    when (option) {
+      LaunchMenuOption.LAUNCH_SIM -> {
+        permissionsSubs.clear()
+        enables.clear()
+        scans.clear()
+        connects.clear()
+        Timber.d("presenting simulator view")
+        view?.presentSimulatorView()
+      }
+    }
+
   }
 
   private fun checkPermissionsAndScan() {
@@ -84,7 +120,7 @@ class LaunchPresenter(val permissionsManager: PermissionsManager, val bleManager
             { if (it) doScan() },
             { Timber.e("failed to request bluetooth enable: $it") }
         )
-        .also { bluetoothSubs.add(it) }
+        .also { enables.add(it) }
         .also { Timber.d("requesting to enable bluetooth") }
 
   }
@@ -96,20 +132,20 @@ class LaunchPresenter(val permissionsManager: PermissionsManager, val bleManager
             { deviceFound(it) },
             {
               Timber.e("failed to scan: $it")
-              view?.refresing = false
+              view?.refreshing = false
             },
-            { view?.refresing = false }
+            { view?.refreshing = false }
         )
         .also { Timber.d("scan started") }
-        .also { bluetoothSubs.add(it) }
-        .also { view?.refresing = true }
+        .also { scans.add(it) }
+        .also { view?.refreshing = true }
   }
 
   private fun deviceFound(device: Phyter) {
     if (instruments.containsKey(device.address)) {
       val prev = instruments[device.address]!!
       instruments[device.address] = device
-      if (prev.name != device.name || prev.rssi != device.rssi){
+      if (prev.name != device.name || prev.rssi != device.rssi) {
         Timber.d("updating $device")
         view?.update(device)
       }

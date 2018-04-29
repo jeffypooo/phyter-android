@@ -7,7 +7,8 @@ import java.util.*
 interface BLEPeripheral {
   val serviceUUID: UUID
   var advertising: Boolean
-
+  var name: String
+  fun dispose()
 }
 
 interface BLEManager {
@@ -26,6 +27,10 @@ interface BLEManager {
    */
   fun requestEnable(): Single<Boolean>
 
-  fun createPeripheral(serviceUuid: UUID): BLEPeripheral?
+  fun createPeripheral(serviceUuid: UUID, name: String): BLEPeripheral?
 
 }
+
+val clientConfigUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+val phyterServiceUUID = UUID.fromString("0000FFE0-0000-1000-8000-00805F9B34FB")
+val phyterSppUUID = UUID.fromString("0000FFE1-0000-1000-8000-00805F9B34FB")
