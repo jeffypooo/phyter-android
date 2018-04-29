@@ -33,7 +33,7 @@ fun makeSppService(): BluetoothGattService {
   return BluetoothGattService(phyterServiceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 }
 
-class PhyterPeripheral(private val context: Context, override val serviceUUID: UUID) : BLEPeripheral {
+class BlePhyterEmulator(private val context: Context, override val serviceUUID: UUID) : BLEPeripheral {
 
   override var advertising: Boolean by Delegates.observable(false) { _, _, _ -> advertisingChanged() }
   override var name: String
@@ -59,6 +59,25 @@ class PhyterPeripheral(private val context: Context, override val serviceUUID: U
       }
     }
   }
+
+  private val advertiser: BluetoothLeAdvertiser? get() = BluetoothAdapter.getDefaultAdapter()?.bluetoothLeAdvertiser
+  private val advertiseSettings by lazy {
+    AdvertiseSettings.Builder().let {
+      it.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+      it.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+      it.setConnectable(true)
+      it.setTimeout(0)
+      it.build()
+    }
+  }
+  private val advertiseData by lazy {
+    AdvertiseData.Builder().let {
+      it.setIncludeDeviceName(true)
+      it.addServiceUuid(ParcelUuid(phyterServiceUUID))
+      it.build()
+    }
+  }
+
   private val gattServerCallback = object : BluetoothGattServerCallback() {
     override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
       when (newState) {
@@ -83,7 +102,7 @@ class PhyterPeripheral(private val context: Context, override val serviceUUID: U
 
     override fun onCharacteristicWriteRequest(device: BluetoothDevice, requestId: Int, characteristic: BluetoothGattCharacteristic, preparedWrite: Boolean, responseNeeded: Boolean, offset: Int, value: ByteArray) {
       if (characteristic.uuid == phyterSppUUID)
-        writeSppCharacteristic(device, requestId, value)
+        receiveSpp(device, requestId, value)
       else
         Timber.w("write req: unknown characteristic")
     }
@@ -100,29 +119,7 @@ class PhyterPeripheral(private val context: Context, override val serviceUUID: U
     }
   }
 
-  private val btManager: BluetoothManager
-    get() = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-  private val advertiser: BluetoothLeAdvertiser?
-    get() = BluetoothAdapter.getDefaultAdapter()?.bluetoothLeAdvertiser
-
-  private val advertiseSettings by lazy {
-    AdvertiseSettings.Builder().let {
-      it.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-      it.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-      it.setConnectable(true)
-      it.setTimeout(0)
-      it.build()
-    }
-  }
-  private val advertiseData by lazy {
-    AdvertiseData.Builder().let {
-      it.setIncludeDeviceName(true)
-      it.addServiceUuid(ParcelUuid(phyterServiceUUID))
-      it.build()
-    }
-  }
-
-
+  private val btManager: BluetoothManager get() = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
   private val server = btManager.openGattServer(context, gattServerCallback).apply {
     val characteristic = makeSppCharacteristic()
     characteristic.addDescriptor(makeClientConfigDescriptor())
@@ -130,11 +127,8 @@ class PhyterPeripheral(private val context: Context, override val serviceUUID: U
     service.addCharacteristic(characteristic)
     addService(service)
   }
-
-  private val sppService: BluetoothGattService
-    get() = server.services.first { it.uuid == phyterServiceUUID }
-  private val sppCharacteristic: BluetoothGattCharacteristic
-    get() = sppService.characteristics.first { it.uuid == phyterSppUUID }
+  private val sppService: BluetoothGattService get() = server.getService(phyterServiceUUID)
+  private val sppCharacteristic: BluetoothGattCharacteristic get() = sppService.getCharacteristic(phyterSppUUID)
 
 
   override fun dispose() {
@@ -153,7 +147,7 @@ class PhyterPeripheral(private val context: Context, override val serviceUUID: U
     }
   }
 
-  private fun writeSppCharacteristic(device: BluetoothDevice, requestId: Int, value: ByteArray) {
+  private fun receiveSpp(device: BluetoothDevice, requestId: Int, value: ByteArray) {
     Timber.v("writing spp characteristic with ${value.size} bytes")
     sppCharacteristic.value = value
     Timber.v("sending gatt response")

@@ -23,14 +23,14 @@ class ActivityBLEManager(activity: Activity) : BLEManager {
   override val enabled: Boolean
     get() = BluetoothAdapter.getDefaultAdapter()?.isEnabled ?: false
 
-  override val scanner: com.jmjproductdev.phyter.core.instrument.PhyterScanner?
-    get() = scannerInstance
+  override val scanner: com.jmjproductdev.phyter.core.instrument.InstrumentScanner?
+    get() = scannerInstanceBle
 
   private val activityRef: WeakReference<Activity> = WeakReference(activity)
   private val activity: Activity?
     get() = activityRef.get()
 
-  private val scannerInstance: PhyterScanner by lazy { PhyterScanner(activity) }
+  private val scannerInstanceBle: BleInstrumentScanner by lazy { BleInstrumentScanner(activity) }
   private var enableSubject: SingleSubject<Boolean>? = null
 
   @Synchronized
@@ -48,7 +48,7 @@ class ActivityBLEManager(activity: Activity) : BLEManager {
   }
 
   override fun createPeripheral(serviceUuid: UUID, name: String): BLEPeripheral? {
-    activity?.apply { return PhyterPeripheral(this, serviceUuid).apply { this.name = name } }
+    activity?.apply { return BlePhyterEmulator(this, serviceUuid).apply { this.name = name } }
     return null
   }
 

@@ -4,7 +4,7 @@ import com.jmjproductdev.phyter.MockitoTest
 import com.jmjproductdev.phyter.android.bluetooth.Devices
 import com.jmjproductdev.phyter.core.bluetooth.BLEManager
 import com.jmjproductdev.phyter.core.instrument.Phyter
-import com.jmjproductdev.phyter.core.instrument.PhyterScanner
+import com.jmjproductdev.phyter.core.instrument.InstrumentScanner
 import com.jmjproductdev.phyter.core.permissions.Permission
 import com.jmjproductdev.phyter.core.permissions.PermissionsManager
 import com.natpryce.hamkrest.absent
@@ -24,7 +24,7 @@ class LaunchPresenterTest : MockitoTest() {
 
   @Mock lateinit var mockPermManager: PermissionsManager
   @Mock lateinit var mockBLEManager: BLEManager
-  @Mock lateinit var mockScanner: PhyterScanner
+  @Mock lateinit var mockScanner: InstrumentScanner
   @Mock lateinit var mockView: LaunchView
 
   /* stub subjects */

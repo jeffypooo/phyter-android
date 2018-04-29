@@ -1,6 +1,6 @@
 package com.jmjproductdev.phyter.core.bluetooth
 
-import com.jmjproductdev.phyter.core.instrument.PhyterScanner
+import com.jmjproductdev.phyter.core.instrument.InstrumentScanner
 import io.reactivex.Single
 import java.util.*
 
@@ -17,9 +17,9 @@ interface BLEManager {
    */
   val enabled: Boolean
   /**
-   * PhyterScanner instance. May be null if bluetooth is disabled or not available.
+   * InstrumentScanner instance. May be null if bluetooth is disabled or not available.
    */
-  val scanner: PhyterScanner?
+  val scanner: InstrumentScanner?
 
   /**
    * Request to enable the bluetooth adapter.

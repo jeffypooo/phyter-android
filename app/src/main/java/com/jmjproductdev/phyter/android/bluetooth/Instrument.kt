@@ -16,7 +16,7 @@ private fun emptyMeasurement() = PhyterMeasurement(0F, 0F, 0F, 0F, 0F)
 
 class PhyterError(msg: String) : Exception(msg)
 
-class BluetoothPhyter(private val context: Context, private val bluetoothDevice: BluetoothDevice, override val rssi: Short) : Phyter {
+class BlePhyter(private val context: Context, private val bluetoothDevice: BluetoothDevice, override val rssi: Short) : Phyter {
 
   companion object {
     const val NAME_UNKNOWN = "Unknown"
@@ -98,7 +98,7 @@ class BluetoothPhyter(private val context: Context, private val bluetoothDevice:
   }
 
   override fun toString(): String {
-    return "BluetoothPhyter{name: $name, address: $address, rssi: $rssi, salinity: $actualSalinity}"
+    return "BlePhyter{name: $name, address: $address, rssi: $rssi, salinity: $actualSalinity}"
   }
 
   private fun completeConnectionIfServiceFound(gatt: BluetoothGatt): Boolean {

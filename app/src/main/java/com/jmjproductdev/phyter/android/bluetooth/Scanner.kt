@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.ParcelUuid
 import com.jmjproductdev.phyter.core.bluetooth.phyterServiceUUID
 import com.jmjproductdev.phyter.core.instrument.Phyter
-import com.jmjproductdev.phyter.core.instrument.PhyterScanner
+import com.jmjproductdev.phyter.core.instrument.InstrumentScanner
 import com.jmjproductdev.phyter.util.npe
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -16,7 +16,7 @@ import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 class ScanError(msg: String) : Exception(msg)
-class PhyterScanner(val context: Context) : PhyterScanner, ScanCallback() {
+class BleInstrumentScanner(val context: Context) : InstrumentScanner, ScanCallback() {
 
   companion object {
     const val SCAN_DURATION_MS = 10000L
@@ -45,7 +45,7 @@ class PhyterScanner(val context: Context) : PhyterScanner, ScanCallback() {
     leScanner?.run {
       return Observable.defer {
         scanSubject = PublishSubject.create()
-        startScan(scanFilters, scanSettings, this@PhyterScanner)
+        startScan(scanFilters, scanSettings, this@BleInstrumentScanner)
             .also { scanInProgress = true }
             .also { Timber.d("BLE scan started") }
         startScanTimer()
@@ -67,7 +67,7 @@ class PhyterScanner(val context: Context) : PhyterScanner, ScanCallback() {
   override fun onScanResult(callbackType: Int, result: ScanResult?) {
     val btDev = result?.device ?: return
     val rssi = result.rssi.toShort()
-    val phyter = BluetoothPhyter(context, btDev, rssi)
+    val phyter = BlePhyter(context, btDev, rssi)
     scanSubject?.onNext(phyter)
   }
 
@@ -81,7 +81,7 @@ class PhyterScanner(val context: Context) : PhyterScanner, ScanCallback() {
   private fun completeScan() {
     leScanner?.run {
       Timber.d("stopping BLE scan")
-      stopScan(this@PhyterScanner)
+      stopScan(this@BleInstrumentScanner)
       scanSubject?.onComplete()
       scanSubject = null
       scanInProgress = false

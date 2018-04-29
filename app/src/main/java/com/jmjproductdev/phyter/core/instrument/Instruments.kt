@@ -71,7 +71,7 @@ interface Phyter {
 /**
  * Bluetooth scanner for PhyterApp instruments.
  */
-interface PhyterScanner {
+interface InstrumentScanner {
   /**
    * Scan state.
    */
