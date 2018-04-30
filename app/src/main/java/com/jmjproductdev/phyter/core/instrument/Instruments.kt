@@ -5,15 +5,20 @@ import io.reactivex.Observable
 import io.reactivex.Single
 
 /**
- * Data model for PhyterApp measurements.
+ * Data model for Phyter measurements.
  */
-class PhyterMeasurement(
-    val ph: Float,
-    val temp: Float,
-    val a578: Float,
-    val a434: Float,
-    val dark: Float
-)
+class MeasurementData(
+    var ph: Float = 0f,
+    var temp: Float = 0f,
+    var a578: Float = 0f,
+    var a434: Float = 0f,
+    var dark: Float = 0f
+) {
+
+  override fun toString(): String {
+    return "MeasurementData(ph=$ph, temp=$temp, a578=$a578, a434=$a434, dark=$dark)"
+  }
+}
 
 /**
  * Represents a PhyterApp measurement tool.
@@ -37,9 +42,9 @@ interface Phyter {
    */
   val connected: Boolean
   /**
-   * The salinity of the sample to be measured.
+   * Emits the current salinity value, and any subsequent changes.
    */
-  var salinity: Float
+  val salinity: Observable<Float>
 
   /**
    * Connect to this instrument.
@@ -54,6 +59,13 @@ interface Phyter {
   fun disconnect(): Completable
 
   /**
+   * Set the salinity of the sample to be measured.
+   * @return [Completable] that completes once the instrument has completed the operation. The [salinity] property
+   * will also emit the new value upon completion.
+   */
+  fun setSalinity(salinity: Float): Completable
+
+  /**
    * Perform background measurements.
    * @return [Completable] that completes once the instrument has completed the operation.
    */
@@ -63,7 +75,7 @@ interface Phyter {
    * Perform a measurement.
    * @return [Single] that emits the measurement results once the instrument has completed the operation.
    */
-  fun measure(): Single<PhyterMeasurement>
+  fun measure(): Single<MeasurementData>
 
 }
 
