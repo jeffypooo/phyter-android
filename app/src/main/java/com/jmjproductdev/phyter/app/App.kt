@@ -6,6 +6,7 @@ import com.crashlytics.android.answers.Answers
 import com.jmjproductdev.phyter.BuildConfig
 import com.jmjproductdev.phyter.R
 import io.fabric.sdk.android.Fabric
+import io.realm.Realm
 import timber.log.Timber
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig
 
@@ -14,12 +15,17 @@ class PhyterApp : Application() {
   override fun onCreate() {
     super.onCreate()
     initLog()
+    initRealm()
     initFabric()
     initFonts()
   }
 
   private fun initLog() {
     Timber.plant(Timber.DebugTree())
+  }
+
+  private fun initRealm() {
+    Realm.init(this)
   }
 
   private fun initFabric() {

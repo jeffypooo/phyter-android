@@ -1,4 +1,4 @@
-package com.jmjproductdev.phyter.core.data.store
+package com.jmjproductdev.phyter.core.data.measurements
 
 import java.util.*
 
@@ -23,3 +23,4 @@ interface MeasurementRecord {
   var a434: Float
 
 }
+
